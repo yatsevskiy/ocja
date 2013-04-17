@@ -7,7 +7,7 @@ public class ProducerConsumer
 {
 
     private Buffer b;
-    private Semaphore full, empty, mutex;
+    private Semaphore consumers, producers, mutex;
 
 
     public static class Buffer
@@ -51,13 +51,13 @@ public class ProducerConsumer
         {
             sleep();
 
-            empty.lock();
+            producers.lock();
             mutex.lock();
             b.add(Integer.valueOf(item));
             System.out.println("Producer "+id+" added " + item);
             item++;
             mutex.unlock();
-            full.unlock();
+            consumers.unlock();
         }
     }
     }
@@ -70,12 +70,12 @@ public class ProducerConsumer
     {
         while (true)
         {
-            full.lock();
+            consumers.lock();
             mutex.lock();
             Integer item = b.remove();
             System.out.println("Consumer " + id + " removed " + item);
             mutex.unlock();
-            empty.unlock();
+            producers.unlock();
             
             sleep();
         }
@@ -83,17 +83,17 @@ public class ProducerConsumer
     }
 
 
-    public ProducerConsumer(int consumers, int producers)
+    public ProducerConsumer(int consumersCount, int producersCount)
     {
     b = new Buffer();
-    empty = new Semaphore(5, "Producer sleeping");
+    producers = new Semaphore(5, "Producer sleeping");
     mutex = new Semaphore(1, null);
-    full = new Semaphore(0, "Consumer sleeping");
+    consumers = new Semaphore(0, "Consumer sleeping");
     
-    for (int i = 0; i < consumers; i++){
+    for (int i = 0; i < consumersCount; i++){
         new Thread(new Consumer(i)).start();
      }
-    for (int i = 0; i < producers; i++) {
+    for (int i = 0; i < producersCount; i++) {
         new Thread(new Producer(i)).start();
     }
     }
