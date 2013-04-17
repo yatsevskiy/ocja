@@ -42,7 +42,6 @@ public class ProducerConsumer
      * The number of items currently on this queue.
      */
 
-    private int items;
 
     /**
      * The maximum number of items that can be on this queue.
@@ -59,7 +58,6 @@ public class ProducerConsumer
     public Buffer(int n)
     {
         buf = new LinkedList();
-        items = 0;
         size = n;
     }
 
@@ -74,7 +72,6 @@ public class ProducerConsumer
     {
         Object result = buf.getFirst();
         buf.remove(0);
-        items--;
         return result;
     }
 
@@ -88,7 +85,6 @@ public class ProducerConsumer
     public void add(Object item)
     {
         buf.add(item);
-        items++;
     }
     }
 
