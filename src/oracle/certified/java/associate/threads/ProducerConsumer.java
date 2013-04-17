@@ -13,7 +13,7 @@ public class ProducerConsumer
     public static class Buffer
     {
     private Queue<Integer> buf;
-    public Buffer(int n)
+    public Buffer()
     {
         buf = new LinkedList<Integer>();
     }
@@ -55,7 +55,7 @@ public class ProducerConsumer
 
             empty.lock();
             mutex.lock();
-            b.add(new Integer(i));
+            b.add(Integer.valueOf(i));
             System.out.println("Producer "+id+" added " + i);
             i++;
             mutex.unlock();
@@ -83,7 +83,7 @@ public class ProducerConsumer
 
             full.lock();
             mutex.lock();
-            Integer item = (Integer)(b.remove());
+            Integer item = b.remove();
             System.out.println("Consumer " + id + " removed " + item);
             mutex.unlock();
             empty.unlock();
@@ -100,20 +100,19 @@ public class ProducerConsumer
     }
 
 
-    public ProducerConsumer(int items, int bufferSize, int consumers)
+    public ProducerConsumer(int consumers, int producers)
     {
-    b = new Buffer(bufferSize);
-    empty = new Semaphore(bufferSize, "Producer sleeping");
+    b = new Buffer();
+    empty = new Semaphore(5, "Producer sleeping");
     mutex = new Semaphore(1, null);
     full = new Semaphore(0, "Consumer sleeping");
     
-    for (int id = 0; id < consumers; id++)
-        {
-        Thread t = new Thread(new Consumer(id));
-        t.start();
-        }
-
-    (new Thread(new Producer(items))).start();
+    for (int i = 0; i < consumers; i++){
+        new Thread(new Consumer(i)).start();
+     }
+    for (int i = 0; i < producers; i++) {
+        new Thread(new Producer(i)).start();
+    }
     }
 
 
@@ -128,6 +127,6 @@ public class ProducerConsumer
     int bufferSize = Integer.parseInt(args[0]);
     int consumers = 1;
 
-    new ProducerConsumer(0, bufferSize, consumers);
+    new ProducerConsumer(5,5);
     }
 }
