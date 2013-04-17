@@ -28,59 +28,48 @@ public class ProducerConsumer
         buf.offer(item);
     }
     }
-
+    
+    private void sleep() {
+        try
+        {
+            Thread.sleep((int)(Math.random() * 10) * 100);
+        }
+        catch (InterruptedException e)
+        {
+        }
+    }
 
     public class Producer implements Runnable
     {
     private int id;
-
-    public Producer(int n)
-    {
-        id = n;
-    }
-
+    public Producer(int n){id = n;}
     public void run()
     {
-        int i = 0;
+        int item = 0;
 
         while (true)
         {
-            try
-            {
-                Thread.sleep((int)(Math.random() * 10) * 100);
-            }
-            catch (InterruptedException e)
-            {
-            }
+            sleep();
 
             empty.lock();
             mutex.lock();
-            b.add(Integer.valueOf(i));
-            System.out.println("Producer "+id+" added " + i);
-            i++;
+            b.add(Integer.valueOf(item));
+            System.out.println("Producer "+id+" added " + item);
+            item++;
             mutex.unlock();
             full.unlock();
         }
     }
     }
 
-
     public class Consumer implements Runnable
     {
-
     private int id;
-
-    public Consumer(int i)
-    {
-        id = i;
-    }
-
-
+    public Consumer(int i){id = i; }
     public void run()
     {
         while (true)
         {
-
             full.lock();
             mutex.lock();
             Integer item = b.remove();
@@ -88,13 +77,7 @@ public class ProducerConsumer
             mutex.unlock();
             empty.unlock();
             
-            try
-            {
-                Thread.sleep((int)(Math.random() * 10) * 100);
-            }
-            catch (InterruptedException e)
-            {
-            }
+            sleep();
         }
     }
     }
@@ -115,18 +98,8 @@ public class ProducerConsumer
     }
     }
 
-
     public static void main(String[] args)
     {
-    if (args.length < 1)
-        {
-        System.err.println("USAGE: java buffer-size");
-        System.exit(1);
-        }
-
-    int bufferSize = Integer.parseInt(args[0]);
-    int consumers = 1;
-
     new ProducerConsumer(5,5);
     }
 }
