@@ -36,7 +36,7 @@ public class ProducerConsumer
      * Storage for items on this queue.
      */
 
-    private LinkedList buf;
+    private LinkedList<Integer> buf;
 
     /**
      * The number of items currently on this queue.
@@ -56,7 +56,7 @@ public class ProducerConsumer
 
     public Buffer(int n)
     {
-        buf = new LinkedList();
+        buf = new LinkedList<Integer>();
     }
 
     /**
@@ -80,7 +80,7 @@ public class ProducerConsumer
      * @param item the item to add
      */
 
-    public void add(Object item)
+    public void add(Integer item)
     {
         buf.add(item);
     }
