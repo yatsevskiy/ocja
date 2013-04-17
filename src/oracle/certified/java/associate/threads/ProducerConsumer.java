@@ -96,8 +96,6 @@ public class ProducerConsumer
      * The number of items for this thread to add.
      */
 
-    private int itemsToAdd;
-
     /**
      * Creates a producer that will add the given number of items
      * to the queue.  The items will be numbered 0,...,<CODE>n</CODE>-1
@@ -105,7 +103,6 @@ public class ProducerConsumer
 
     public Producer(int n)
     {
-        itemsToAdd = n;
     }
 
     /**
