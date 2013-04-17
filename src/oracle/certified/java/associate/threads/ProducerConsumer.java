@@ -47,7 +47,6 @@ public class ProducerConsumer
      * The maximum number of items that can be on this queue.
      */
 
-    private int size;
 
     /**
      * Creates a queue that can hold up to the given number of items.
@@ -58,7 +57,6 @@ public class ProducerConsumer
     public Buffer(int n)
     {
         buf = new LinkedList();
-        size = n;
     }
 
     /**
