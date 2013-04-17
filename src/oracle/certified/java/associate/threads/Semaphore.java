@@ -36,7 +36,7 @@ public class Semaphore
     message = mess;
     }
 
-    public synchronized void down()
+    public synchronized void lock()
     {
     if (value > 0)
         {
@@ -57,7 +57,7 @@ public class Semaphore
         }
     }
 
-    public synchronized void up()
+    public synchronized void unlock()
     {
     if (waiting > 0)
         {

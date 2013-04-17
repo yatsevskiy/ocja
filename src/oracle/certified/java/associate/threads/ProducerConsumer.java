@@ -92,6 +92,8 @@ public class ProducerConsumer
 
     public class Producer implements Runnable
     {
+    private int id;
+
     /**
      * The number of items for this thread to add.
      */
@@ -103,6 +105,7 @@ public class ProducerConsumer
 
     public Producer(int n)
     {
+        id = n;
     }
 
     /**
@@ -125,13 +128,13 @@ public class ProducerConsumer
 
             // code modified from Tanenbaum, p. 112
 
-            empty.down();
-            mutex.down();
+            empty.lock();
+            mutex.lock();
             b.add(new Integer(i));
-            System.out.println("Producer added " + i);
+            System.out.println("Producer "+id+" added " + i);
             i++;
-            mutex.up();
-            full.up();
+            mutex.unlock();
+            full.unlock();
         }
     }
     }
@@ -169,12 +172,12 @@ public class ProducerConsumer
         {
             // code modified from Tanenbaum, p. 112
 
-            full.down();
-            mutex.down();
+            full.lock();
+            mutex.lock();
             Integer item = (Integer)(b.remove());
             System.out.println("Consumer " + id + " removed " + item);
-            mutex.up();
-            empty.up();
+            mutex.unlock();
+            empty.unlock();
             
             try
             {
