@@ -1,34 +1,17 @@
 package oracle.certified.java.associate.threads;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.Queue;
 
 
 public class ProducerConsumer
 {
+    private Semaphore empty = new Semaphore(5, "Producer sleeping");
+    private Semaphore mutex = new Semaphore(1);
+    private Semaphore full = new Semaphore(0, "Consumer sleeping");
 
-    private Buffer b;
-    private Semaphore consumers, producers, mutex;
+    private Queue<Integer> buf = new LinkedList<Integer>();
 
-
-    public static class Buffer
-    {
-    private Queue<Integer> buf;
-    public Buffer()
-    {
-        buf = new LinkedList<Integer>();
-    }
-
-    public Integer remove()
-    {
-        return buf.poll();
-    }
-
-    public void add(Integer item)
-    {
-        buf.offer(item);
-    }
-    }
-    
     private void sleep() {
         try
         {
@@ -36,13 +19,14 @@ public class ProducerConsumer
         }
         catch (InterruptedException e)
         {
+            System.err.println(e.getMessage());
         }
     }
 
     public class Producer implements Runnable
     {
     private int id;
-    public Producer(int n){id = n;}
+    public Producer(int id){this.id = id;}
     public void run()
     {
         int item = 0;
@@ -51,13 +35,13 @@ public class ProducerConsumer
         {
             sleep();
 
-            producers.lock();
+            empty.lock();
             mutex.lock();
-            b.add(Integer.valueOf(item));
+            buf.offer(Integer.valueOf(item));
             System.out.println("Producer "+id+" added " + item);
             item++;
             mutex.unlock();
-            consumers.unlock();
+            full.unlock();
         }
     }
     }
@@ -65,17 +49,17 @@ public class ProducerConsumer
     public class Consumer implements Runnable
     {
     private int id;
-    public Consumer(int i){id = i; }
+    public Consumer(int id){this.id = id; }
     public void run()
     {
         while (true)
         {
-            consumers.lock();
+            full.lock();
             mutex.lock();
-            Integer item = b.remove();
+            Integer item = buf.poll();;
             System.out.println("Consumer " + id + " removed " + item);
             mutex.unlock();
-            producers.unlock();
+            empty.unlock();
             
             sleep();
         }
@@ -85,15 +69,10 @@ public class ProducerConsumer
 
     public ProducerConsumer(int consumersCount, int producersCount)
     {
-    b = new Buffer();
-    producers = new Semaphore(5, "Producer sleeping");
-    mutex = new Semaphore(1, null);
-    consumers = new Semaphore(0, "Consumer sleeping");
-    
-    for (int i = 0; i < consumersCount; i++){
+    for (int i = 0; i < consumersCount; ++i){
         new Thread(new Consumer(i)).start();
      }
-    for (int i = 0; i < producersCount; i++) {
+    for (int i = 0; i < producersCount; ++i) {
         new Thread(new Producer(i)).start();
     }
     }

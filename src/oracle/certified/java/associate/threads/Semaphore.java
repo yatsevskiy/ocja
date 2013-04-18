@@ -1,39 +1,23 @@
 package oracle.certified.java.associate.threads;
 
-/**
- * A semaphore implemented using Java synchronization (condition variables
- * and monitors).
- *
- * @author Jim Glenn
- * @version 0.1 10/22/2007
- */
 
 public class Semaphore
 {
-    /**
-     * The current value of this semaphore.
-     */
 
     private int value;
 
-    /**
-     * The number of threads waiting on this semaphore.
-     */
-
     private int waiting;
-    
-    /**
-     * A message to display when a thread sleeps on this semaphore
-     * (for debugging).
-     */
 
     private String message;
 
-    public Semaphore(int val, String mess)
+    public Semaphore(int value, String message)
     {
-    value = val;
-    waiting = 0;
-    message = mess;
+    this.value = value;
+    this.message = message;
+    }
+
+    public Semaphore(int value) {
+        this.value = value;
     }
 
     public synchronized void lock()
@@ -47,12 +31,14 @@ public class Semaphore
         try
             {
             waiting++;
-            if (message != null)
+            if (message != null) {
                 System.err.println(message);
+            }
             wait();
             }
         catch (InterruptedException e)
             {
+            System.err.println(e.getMessage());
             }
         }
     }
