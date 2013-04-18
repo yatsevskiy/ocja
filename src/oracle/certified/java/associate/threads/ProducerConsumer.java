@@ -6,12 +6,30 @@ import java.util.Queue;
 
 public class ProducerConsumer
 {
-    private Semaphore empty = new Semaphore(5, "Producer sleeping");
+    private Semaphore empty = new Semaphore(10, "Producer sleeping");
     private Semaphore mutex = new Semaphore(1);
     private Semaphore full = new Semaphore(0, "Consumer sleeping");
 
     private Queue<Integer> buf = new LinkedList<Integer>();
 
+    private int product;
+    public void produce(int id) {
+        empty.lock();
+        mutex.lock();
+        buf.offer(Integer.valueOf(product));
+        System.out.println("Producer "+id+" added " + product);
+        ++product;
+        mutex.unlock();
+        full.unlock();
+    }
+    public void consume(int id) {
+        full.lock();
+        mutex.lock();
+        Integer item = buf.poll();;
+        System.out.println("Consumer " + id + " removed " + item);
+        mutex.unlock();
+        empty.unlock();
+    }
     private void sleep() {
         try
         {
@@ -22,26 +40,21 @@ public class ProducerConsumer
             System.err.println(e.getMessage());
         }
     }
-
     public class Producer implements Runnable
     {
     private int id;
-    public Producer(int id){this.id = id;}
+
+    public Producer(int id) {
+        this.id = id;
+        }
+
     public void run()
     {
-        int item = 0;
 
         while (true)
         {
             sleep();
-
-            empty.lock();
-            mutex.lock();
-            buf.offer(Integer.valueOf(item));
-            System.out.println("Producer "+id+" added " + item);
-            item++;
-            mutex.unlock();
-            full.unlock();
+            produce(id);
         }
     }
     }
@@ -49,18 +62,16 @@ public class ProducerConsumer
     public class Consumer implements Runnable
     {
     private int id;
-    public Consumer(int id){this.id = id; }
+
+    public Consumer(int id) {
+        this.id = id;
+        }
+
     public void run()
     {
         while (true)
         {
-            full.lock();
-            mutex.lock();
-            Integer item = buf.poll();;
-            System.out.println("Consumer " + id + " removed " + item);
-            mutex.unlock();
-            empty.unlock();
-            
+            consume(id);
             sleep();
         }
     }
