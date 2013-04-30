@@ -1,62 +1,133 @@
 package oracle.certified.java.associate.threads;
 
-class Atom implements Runnable {
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
-	Object mutex = new Object();
+abstract class Atom implements Runnable {
 
-	int count;
+    public abstract int getCount();
+}
 
-	Thread f;
-	Thread s;
+class Broken extends Atom {
 
-	void dumpState(String tag) {
-		System.out.println(tag);
-		System.out.println(f.getName() + ": " + f.getState());
-		System.out.println(s.getName() + ": " + s.getState());
-	}
+    private int count;
 
-	@Override
-	public void run() {
+    public int getCount() {
+        return count;
+    }
 
-		for (int i = 0; i < Atomic.COUNT; ++i) {
-			++count;
-		}
-	}
+    @Override
+    public void run() {
+
+        for (int i = 0; i < Atomic.COUNT; ++i) {
+            ++count;
+        }
+    }
+}
+
+class Unsafe extends Atom {
+
+    private volatile int count;
+
+    public int getCount() {
+        return count;
+    }
+
+    @Override
+    public void run() {
+
+        for (int i = 0; i < Atomic.COUNT; ++i) {
+            ++count;
+        }
+    }
+}
+
+class Locked extends Atom {
+
+    private int count;
+
+    public int getCount() {
+        synchronized (this) {
+            return count;
+        }
+    }
+
+    @Override
+    public void run() {
+
+        for (int i = 0; i < Atomic.COUNT; ++i) {
+            synchronized (this) {
+                ++count;
+            }
+        }
+    }
+}
+
+class Safe extends Atom {
+
+    private final AtomicInteger count = new AtomicInteger();
+
+    public int getCount() {
+        return count.get();
+    }
+
+    @Override
+    public void run() {
+
+        for (int i = 0; i < Atomic.COUNT; ++i) {
+            count.incrementAndGet();
+        }
+    }
 }
 
 public class Atomic {
 
-	static final int COUNT = 100000000;
+    static final int COUNT = 100000000;
+    private static final int THREDS = 1;
+    private static final int EXPECTED_RESULT = COUNT * THREDS;
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 
-		long s = System.currentTimeMillis();
+        ArrayList<Atom> atoms = new ArrayList<Atom>();
+        atoms.add(new Broken());
+        atoms.add(new Unsafe());
+        atoms.add(new Safe());
+        atoms.add(new Locked());
 
-		Atom atom = new Atom();
+        for (Atom atom : atoms) {
 
-		(atom.f = new Thread(atom)).start();
-		(atom.s = new Thread(atom)).start();
+            long s = System.currentTimeMillis();
+            ArrayList<Thread> threads = new ArrayList<Thread>();
+            for (int i = 0; i < THREDS; ++i) {
+                threads.add(new Thread(atom));
+            }
 
-		try {
-			atom.f.join();
-			atom.s.join();
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		}
+            for (Thread thread : threads) {
+                thread.start();
+            }
 
-		if (atom.f.getState() != Thread.State.TERMINATED
-				&& atom.s.getState() != Thread.State.TERMINATED)
-			throw new RuntimeException();
+            for (Thread thread : threads) {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException();
+                }
+            }
 
-		if (atom.count != COUNT * 2) {
-			throw new RuntimeException(atom.count + " but expected result was "
-					+ COUNT * 2 + ", Integer.MAX_VALUE: " + Integer.MAX_VALUE);
-		} else {
-			System.out.println("done");
-		}
+            for (Thread thread : threads) {
+                if (thread.getState() != Thread.State.TERMINATED) {
+                    throw new RuntimeException();
+                }
+            }
+            System.out.print(atom.toString() + ": " + (System.currentTimeMillis() - s)
+                    + " ms; ");
 
-		System.out.println(System.currentTimeMillis() - s + " ms");
-
-	}
-
+            if (atom.getCount() != EXPECTED_RESULT) {
+                System.out.println("Result " + atom.getCount() + " but expected "
+                        + EXPECTED_RESULT);
+            } else {
+                System.out.println("done");
+            }
+        }
+    }
 }
